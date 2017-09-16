@@ -12,6 +12,11 @@ void main() {
     float r = atan(sqrt(x*x+y*y), a_position.z) / 3.141592;
     float phi = atan(y,x);
 
-    v_TexCoord = vec2(r*cos(phi) + 0.5, r*sin(phi) + 0.5);
+    if (a_position.z < 0.0) {
+        v_TexCoord = vec2(0.0, 0.0);
+    } else {
+        v_TexCoord = vec2(r*cos(phi) + 0.5, r*sin(phi) + 0.5);
+    }
+
     gl_Position = u_proj*a_position;
 }
