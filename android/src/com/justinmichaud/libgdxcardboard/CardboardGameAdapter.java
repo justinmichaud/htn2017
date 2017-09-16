@@ -64,7 +64,7 @@ public class CardboardGameAdapter extends CardBoardAndroidApplication
 
     @Override
     public void onNewFrame(HeadTransform paramHeadTransform) {
-        cameraRenderer.update();
+        cameraRenderer.update(paramHeadTransform);
     }
 
     @Override
