@@ -2,6 +2,7 @@ package com.justinmichaud.libgdxcardboard;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
@@ -10,6 +11,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
@@ -18,6 +20,8 @@ import com.google.vrtoolkit.cardboard.Eye;
 import com.google.vrtoolkit.cardboard.HeadTransform;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -74,16 +78,50 @@ public class CameraRenderer {
             e.printStackTrace();
         }
 
-        mesh = new Mesh(true, 4, 6, VertexAttribute.Position(), VertexAttribute.ColorUnpacked(), VertexAttribute.TexCoords(0));
-        mesh.setVertices(new float[]
-                {-1.6f*0.7f, -1.0f*0.7f, 0.5f, 1, 1, 1, 1, 0, 0,
-                  1.6f*0.7f, -1.0f*0.7f, 0.5f, 1, 1, 1, 1, 0, 0,
-                  1.6f*0.7f,  1.0f*0.7f, 0.5f, 1, 1, 1, 1, 0, 0,
-                 -1.6f*0.7f,  1.0f*0.7f, 0.5f, 1, 1, 1, 1, 0, 0});
-        mesh.setIndices(new short[] {0, 1, 2, 2, 3, 0});
+        mesh = new Mesh(true, 10000, 10000, VertexAttribute.Position());
+        mesh.setVertices(readFloats(R.raw.verts, activity));
+        mesh.setIndices(readShort(R.raw.indices, activity));
 
         externalShader = new ShaderProgram(externalVertexShader, externalFragmentShader);
         worldCamera = new Camera();
+    }
+
+    private float[] readFloats(int id, Context c) {
+        String[] values = readTxt(id, c).replaceAll("\n", "").split(" ");
+        float[] f = new float[values.length];
+        for (int i=0; i<values.length; i++) {
+            f[i] = Float.parseFloat(values[i]);
+        }
+        return f;
+    }
+
+    private short[] readShort(int id, Context c) {
+        String[] values = readTxt(id, c).replaceAll("\n", "").split(" ");
+        short[] f = new short[values.length];
+        for (int i=0; i<values.length; i++) {
+            f[i] = (short) (Short.parseShort(values[i]) - 1);
+        }
+        return f;
+    }
+
+    private String readTxt(int id, Context c){
+        InputStream inputStream = c.getResources().openRawResource(id);
+        StringBuilder b = new StringBuilder();
+
+        int i;
+        try {
+            i = inputStream.read();
+            while (i != -1)
+            {
+                b.append((char) i);
+                i = inputStream.read();
+            }
+            inputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+
+        return b.toString();
     }
 
     public void openCamera(Activity activity) {
