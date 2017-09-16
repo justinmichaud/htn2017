@@ -11,9 +11,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.google.vrtoolkit.cardboard.Eye;
@@ -21,7 +21,6 @@ import com.google.vrtoolkit.cardboard.HeadTransform;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -37,13 +36,15 @@ public class CameraRenderer {
     private final Mesh mesh;
     private final ShaderProgram externalShader;
     private final Camera worldCamera;
+    private final Texture cube_tex;
     private HeadTransform headTransform;
 
     private static String externalFragmentShader =
-            "#extension GL_OES_EGL_image_external : require\n" +
+//            "#extension GL_OES_EGL_image_external : require\n" +
                     "precision mediump float;\n" +
                     "\n" +
-                    "uniform samplerExternalOES u_Texture;\n" +
+//                    "uniform samplerExternalOES u_Texture;\n" +
+                    "uniform sampler2D u_Texture;\n" + // temp
                     "varying vec2 v_TexCoord;\n" +
                     "\n" +
                     "void main() {\n" +
@@ -66,6 +67,7 @@ public class CameraRenderer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        cube_tex = new Texture("cube_orig.jpg");
 
         mesh = new Mesh(true, 10000, 10000, VertexAttribute.Position());
         mesh.setVertices(readFloats(R.raw.verts, activity));
@@ -159,6 +161,9 @@ public class CameraRenderer {
         Gdx.gl.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
                 cameraTextureUnit);
         cameraPreviewTexture.updateTexImage();
+
+        // Temp
+        cube_tex.bind();
 
         worldCamera.updateEye(eye);
 
