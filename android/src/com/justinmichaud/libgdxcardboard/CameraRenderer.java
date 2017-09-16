@@ -49,17 +49,6 @@ public class CameraRenderer {
                     "void main() {\n" +
                     "    gl_FragColor = texture2D(u_Texture, v_TexCoord);\n" +
                     "}\n";
-    private static String externalVertexShader =
-                    "attribute vec4 a_position;\n" +
-                    "attribute vec2 a_texCoord0;\n" +
-                    "uniform mat4 u_proj;\n" +
-                    "\n" +
-                    "varying vec2 v_TexCoord;\n" +
-                    "\n" +
-                    "void main() {\n" +
-                    "   v_TexCoord = vec2(-1.0, -1.0)*a_position.xy/2.0 + 0.5;\n" +
-                    "   gl_Position = u_proj*a_position;\n" +
-                    "}\n";
 
     public CameraRenderer(final Activity activity) {
         openCamera(activity);
@@ -82,7 +71,7 @@ public class CameraRenderer {
         mesh.setVertices(readFloats(R.raw.verts, activity));
         mesh.setIndices(readShort(R.raw.indices, activity));
 
-        externalShader = new ShaderProgram(externalVertexShader, externalFragmentShader);
+        externalShader = new ShaderProgram(readTxt(R.raw.vertexshader, activity), externalFragmentShader);
         worldCamera = new Camera();
     }
 

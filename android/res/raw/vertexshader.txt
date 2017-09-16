@@ -1,0 +1,10 @@
+attribute vec4 a_position;
+attribute vec2 a_texCoord0;
+uniform mat4 u_proj;
+
+varying vec2 v_TexCoord;
+
+void main() {
+   v_TexCoord = vec2(-1.0, -1.0)*a_position.xy/2.0 + 0.5;
+   gl_Position = u_proj*a_position;
+}
