@@ -6,8 +6,8 @@ varying vec2 v_TexCoord;
 
 void main() {
 
-    float x = a_position.x;
-    float y = a_position.y;
+    float x = a_position.x*-1.0;
+    float y = a_position.y*-1.0;
 
     float r = atan(sqrt(x*x+y*y), a_position.z) / 3.141592;
     float phi = atan(y,x);

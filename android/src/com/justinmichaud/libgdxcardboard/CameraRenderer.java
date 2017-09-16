@@ -36,20 +36,18 @@ public class CameraRenderer {
     private final Mesh mesh;
     private final ShaderProgram externalShader;
     private final Camera worldCamera;
-    private final Texture cube_tex;
     private HeadTransform headTransform;
 
     private static String externalFragmentShader =
-//            "#extension GL_OES_EGL_image_external : require\n" +
-                    "precision mediump float;\n" +
-                    "\n" +
-//                    "uniform samplerExternalOES u_Texture;\n" +
-                    "uniform sampler2D u_Texture;\n" + // temp
-                    "varying vec2 v_TexCoord;\n" +
-                    "\n" +
-                    "void main() {\n" +
-                    "    gl_FragColor = texture2D(u_Texture, v_TexCoord);\n" +
-                    "}\n";
+            "#extension GL_OES_EGL_image_external : require\n" +
+            "precision mediump float;\n" +
+            "\n" +
+            "uniform samplerExternalOES u_Texture;\n" +
+            "varying vec2 v_TexCoord;\n" +
+            "\n" +
+            "void main() {\n" +
+            "    gl_FragColor = texture2D(u_Texture, v_TexCoord);\n" +
+            "}\n";
 
     public CameraRenderer(final Activity activity) {
         openCamera(activity);
@@ -67,7 +65,6 @@ public class CameraRenderer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        cube_tex = new Texture("cube_orig.jpg");
 
         mesh = new Mesh(true, 10000, 10000, VertexAttribute.Position());
         mesh.setVertices(readFloats(R.raw.verts, activity));
@@ -161,9 +158,6 @@ public class CameraRenderer {
         Gdx.gl.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
                 cameraTextureUnit);
         cameraPreviewTexture.updateTexImage();
-
-        // Temp
-        cube_tex.bind();
 
         worldCamera.updateEye(eye);
 
