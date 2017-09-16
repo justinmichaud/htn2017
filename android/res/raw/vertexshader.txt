@@ -5,32 +5,13 @@ uniform mat4 u_proj;
 varying vec2 v_TexCoord;
 
 void main() {
-    vec2 pfish;
-    float theta,phi,r;
-    vec3 psph;
 
-    float FOV = 3.141592654; // FOV of the fisheye, eg: 180 degrees
-    float width = 1.0;
-    float height = 1.0;
+    float x = a_position.x;
+    float y = a_position.y;
 
-    // Polar angles
-    theta = 2.0 * 3.14159265 * (a_position.x / width - 0.5); // -pi to pi
-    phi = 3.14159265 * (a_position.y / height - 0.5);	// -pi/2 to pi/2
+    float r = atan(sqrt(x*x+y*y), a_position.z) / 3.141592;
+    float phi = atan(y,x);
 
-    // Vector in 3D space
-    psph.x = cos(phi) * sin(theta);
-    psph.y = cos(phi) * cos(theta);
-    psph.z = sin(phi);
-
-    // Calculate fisheye angle and radius
-    theta = atan(psph.z,psph.x);
-    phi = atan(sqrt(psph.x*psph.x+psph.z*psph.z),psph.y);
-    r = width * phi / FOV;
-
-    // Pixel in fisheye space
-    pfish.x = 0.5 * width + r * cos(theta);
-    pfish.y = 0.5 * width + r * sin(theta);
-
-    v_TexCoord = pfish.xy;
+    v_TexCoord = vec2(r*cos(phi) + 0.5, r*sin(phi) + 0.5);
     gl_Position = u_proj*a_position;
 }
