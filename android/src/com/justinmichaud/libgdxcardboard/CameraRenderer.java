@@ -53,7 +53,7 @@ public class CameraRenderer {
                     "varying vec2 v_TexCoord;\n" +
                     "\n" +
                     "void main() {\n" +
-                    "   v_TexCoord = vec2(1.0, -1.0)*a_position.xy/2.0 + 0.5;\n" +
+                    "   v_TexCoord = vec2(-1.0, -1.0)*a_position.xy/2.0 + 0.5;\n" +
                     "   gl_Position = u_proj*a_position;\n" +
                     "}\n";
 
