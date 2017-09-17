@@ -125,3 +125,7 @@ idea {
         }
     }
 }
+
+dependencies {
+    compile project(':library')
+}

@@ -1,28 +1,21 @@
 package com.justinmichaud.libgdxcardboard;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.view.Surface;
-import android.widget.MediaController;
-import android.widget.VideoView;
+import android.view.WindowManager;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.google.vrtoolkit.cardboard.Eye;
 import com.google.vrtoolkit.cardboard.HeadTransform;
+import com.pedro.vlc.VlcListener;
+import com.pedro.vlc.VlcVideoLibrary;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,13 +27,12 @@ import static com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA;
 
 public class CameraRenderer {
 
-    private final MediaPlayer player;
-    private final Surface surface;
     private final SurfaceTexture cameraPreviewTexture;
     private final int cameraTextureUnit;
     private final Mesh mesh;
     private final ShaderProgram externalShader;
     private final Camera worldCamera;
+    private final VlcVideoLibrary vlcVideoLibrary;
     private HeadTransform headTransform;
 
     private static String externalFragmentShader =
@@ -60,11 +52,19 @@ public class CameraRenderer {
         cameraTextureUnit = hTex[0];
 
         cameraPreviewTexture = new SurfaceTexture(cameraTextureUnit);
-        cameraPreviewTexture.setDefaultBufferSize(500, 500);
+        cameraPreviewTexture.setDefaultBufferSize(1920, 1080);
 
-        surface = new Surface(cameraPreviewTexture);
-        player = MediaPlayer.create(activity, Uri.parse("rtsp://10.21.155.226:8086"));
-        player.setSurface(surface);
+        vlcVideoLibrary = new VlcVideoLibrary(activity, new VlcListener() {
+            @Override
+            public void onComplete() {
+
+            }
+
+            @Override
+            public void onError() {
+                System.out.println("onError!!!!!!!!!!!!!!!!!!!!");
+            }
+        }, cameraPreviewTexture);
 
         mesh = new Mesh(true, 10000, 10000, VertexAttribute.Position());
         mesh.setVertices(readFloats(R.raw.verts, activity));
@@ -73,7 +73,13 @@ public class CameraRenderer {
         externalShader = new ShaderProgram(readTxt(R.raw.vertexshader, activity), externalFragmentShader);
         worldCamera = new Camera();
 
-        player.start();
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                vlcVideoLibrary.play("rtsp://10.21.62.55:8080/h264_ulaw.sdp");
+                activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            }
+        });
     }
 
     private float[] readFloats(int id, Context c) {
@@ -136,7 +142,6 @@ public class CameraRenderer {
     }
 
     public void dispose() {
-        surface.release();
         cameraPreviewTexture.release();
     }
 }
