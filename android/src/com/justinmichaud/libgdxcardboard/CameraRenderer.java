@@ -3,6 +3,7 @@ package com.justinmichaud.libgdxcardboard;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
+import android.net.Uri;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.view.WindowManager;
@@ -17,8 +18,14 @@ import com.google.vrtoolkit.cardboard.HeadTransform;
 import com.pedro.vlc.VlcListener;
 import com.pedro.vlc.VlcVideoLibrary;
 
+import org.videolan.libvlc.IVLCVout;
+import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.Media;
+import org.videolan.libvlc.MediaPlayer;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -32,7 +39,6 @@ public class CameraRenderer {
     private final Mesh mesh;
     private final ShaderProgram externalShader;
     private final Camera worldCamera;
-    private final VlcVideoLibrary vlcVideoLibrary;
     private HeadTransform headTransform;
 
     private static String externalFragmentShader =
@@ -54,17 +60,24 @@ public class CameraRenderer {
         cameraPreviewTexture = new SurfaceTexture(cameraTextureUnit);
         cameraPreviewTexture.setDefaultBufferSize(1920, 1080);
 
-        vlcVideoLibrary = new VlcVideoLibrary(activity, new VlcListener() {
-            @Override
-            public void onComplete() {
+        ArrayList<String> options = new ArrayList<>();
+        options.add("--file-caching=2000");
+        options.add("-vvv");
 
-            }
+        LibVLC mLibVLC = new LibVLC(activity, options);
+        MediaPlayer mMediaPlayer =  new MediaPlayer(mLibVLC);
 
-            @Override
-            public void onError() {
-                System.out.println("onError!!!!!!!!!!!!!!!!!!!!");
-            }
-        }, cameraPreviewTexture);
+        Media media = new Media(mLibVLC, Uri.parse("rtsp://192.168.43.1:8080/h264_ulaw.sdp"));
+        media.setHWDecoderEnabled(true, false);
+        media.addOption(":network-caching=150");
+        media.addOption(":clock-jitter=0");
+        media.addOption(":clock-synchro=0");
+
+        mMediaPlayer.setMedia(media);
+        IVLCVout vout = mMediaPlayer.getVLCVout();
+        vout.setVideoSurface(cameraPreviewTexture);
+        vout.attachViews();
+        mMediaPlayer.play();
 
         mesh = new Mesh(true, 10000, 10000, VertexAttribute.Position());
         mesh.setVertices(readFloats(R.raw.verts, activity));
@@ -76,7 +89,6 @@ public class CameraRenderer {
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                vlcVideoLibrary.play("rtsp://10.21.62.55:8080/h264_ulaw.sdp");
                 activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             }
         });
