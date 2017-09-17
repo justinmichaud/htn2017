@@ -5,10 +5,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.view.Surface;
+import android.widget.MediaController;
+import android.widget.VideoView;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -29,8 +34,8 @@ import static com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA;
 
 public class CameraRenderer {
 
-    private android.hardware.Camera camera;
-    private android.hardware.Camera.CameraInfo cameraInfo;
+    private final MediaPlayer player;
+    private final Surface surface;
     private final SurfaceTexture cameraPreviewTexture;
     private final int cameraTextureUnit;
     private final Mesh mesh;
@@ -50,8 +55,6 @@ public class CameraRenderer {
             "}\n";
 
     public CameraRenderer(final Activity activity) {
-        openCamera(activity);
-
         int[] hTex = new int[1];
         GLES20.glGenTextures ( 1, hTex, 0 );
         cameraTextureUnit = hTex[0];
@@ -59,12 +62,9 @@ public class CameraRenderer {
         cameraPreviewTexture = new SurfaceTexture(cameraTextureUnit);
         cameraPreviewTexture.setDefaultBufferSize(500, 500);
 
-        try {
-            camera.setPreviewTexture(cameraPreviewTexture);
-            camera.startPreview();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        surface = new Surface(cameraPreviewTexture);
+        player = MediaPlayer.create(activity, Uri.parse("rtsp://10.21.155.226:8086"));
+        player.setSurface(surface);
 
         mesh = new Mesh(true, 10000, 10000, VertexAttribute.Position());
         mesh.setVertices(readFloats(R.raw.verts, activity));
@@ -72,6 +72,8 @@ public class CameraRenderer {
 
         externalShader = new ShaderProgram(readTxt(R.raw.vertexshader, activity), externalFragmentShader);
         worldCamera = new Camera();
+
+        player.start();
     }
 
     private float[] readFloats(int id, Context c) {
@@ -112,40 +114,6 @@ public class CameraRenderer {
         return b.toString();
     }
 
-    public void openCamera(Activity activity) {
-        while (ContextCompat.checkSelfPermission(activity,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity,
-                    new String[]{Manifest.permission.CAMERA},
-                    0);
-        }
-
-        camera = android.hardware.Camera.open(0);
-        cameraInfo = new android.hardware.Camera.CameraInfo();
-        android.hardware.Camera.getCameraInfo(0, cameraInfo);
-
-        int targetWidth = 500;
-        android.hardware.Camera.Size size = null;
-
-        android.hardware.Camera.Parameters param = camera.getParameters();
-
-        for (android.hardware.Camera.Size s : param.getSupportedPreviewSizes()) {
-            if (size == null || Math.abs(s.width - targetWidth)
-                    < Math.abs(size.width - targetWidth)) size = s;
-        }
-        param.setPreviewSize(size.width,size.height);
-        size = null;
-
-        for (android.hardware.Camera.Size s : param.getSupportedPictureSizes()) {
-            if (size == null || Math.abs(s.width - targetWidth)
-                    < Math.abs(size.width - targetWidth)) size = s;
-        }
-        param.setPictureSize(size.width,size.height);
-
-        camera.setParameters(param);
-    }
-
     public void update(HeadTransform transform) {
         worldCamera.update(transform);
     }
@@ -168,6 +136,7 @@ public class CameraRenderer {
     }
 
     public void dispose() {
-        camera.unlock();
+        surface.release();
+        cameraPreviewTexture.release();
     }
 }
